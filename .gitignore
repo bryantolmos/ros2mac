@@ -15,5 +15,9 @@ jazzy_ws/build/
 jazzy_ws/install/
 jazzy_ws/log/
 
+# other
+build/
+.vscode/
+
 # docker build caches
 .docker/
