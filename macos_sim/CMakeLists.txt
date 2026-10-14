@@ -7,6 +7,7 @@ project(macos_sim
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(SIM_TARGET "robot_sim")
 
 # resolve homebrew prefix dynamically
 execute_process(
@@ -36,13 +37,18 @@ message(STATUS "Found MuJoCo framework at: ${MUJOCO_FRAMEWORK}")
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 
-add_executable(kinova_sim src/main.cpp)
-
-target_include_directories(kinova_sim PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
+add_executable(${SIM_TARGET}
+    src/main.cpp
+    # src/sim_engine.cpp
+    # src/visualizer.cpp
 )
 
-target_link_libraries(kinova_sim PRIVATE
+target_include_directories(${SIM_TARGET} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${MUJOCO_FRAMEWORK}/Headers
+)
+
+target_link_libraries(${SIM_TARGET} PRIVATE
     ${MUJOCO_FRAMEWORK}
     glfw
     OpenGL::GL
@@ -50,11 +56,17 @@ target_link_libraries(kinova_sim PRIVATE
 
 # inject the caskroom directory into the binary runtime load path (LC_RPATH)
 get_filename_component(MUJOCO_FRAMEWORK_DIR "${MUJOCO_FRAMEWORK}" DIRECTORY)
-set_property(TARGET kinova_sim APPEND PROPERTY BUILD_RPATH "${MUJOCO_FRAMEWORK_DIR}")
+set_target_properties(${SIM_TARGET} PROPERTIES
+    MACOSX_RPATH TRUE
+    INSTALL_RPATH_USE_LINK_PATH TRUE
+    BUILD_RPATH "${MUJOCO_FRAMEWORK_DIR};/opt/homebrew/lib"
+    INSTALL_RPATH "@loader_path/../lib;${MUJOCO_FRAMEWORK_DIR}"
+)
 
-target_compile_options(kinova_sim PRIVATE
+target_compile_options(${SIM_TARGET} PRIVATE
     -Wall
     -Wextra
     -O3
-    -march=native
+    -Wconversion
+    -Wno-deprecated-declarations
 )
